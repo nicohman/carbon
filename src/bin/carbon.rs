@@ -5,6 +5,7 @@ use std::env;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Read;
+use std::fs::File;
 fn main() {
     if fs::metadata(get_home() + "/.config/carbon").is_err() {
         init();
@@ -38,10 +39,63 @@ fn interpret_line(line: &str) {
                     _ => println!("I don't know what you're trying to make"),
                 }
             }
+            "gen" => {
+                match opts[1].to_lowercase().as_ref() {
+                    "trash" => gen_npc(&get_camp(get_editing()).unwrap().1, true),
+                    _ => println!("I don't know what you're trying to generate"),
+                }
+            }
+            "info" => {
+                let results = get_camp(get_editing()).unwrap();
+                println!(
+                    "Name:{}\nSystem:{}\nDescription:{}",
+                    results.0,
+                    results.1,
+                    results.2
+                )
+            }
             "help" => print_help(),
             "use" => switch_campaign(opts[1].as_ref()),
             _ => println!("No known command entered. help for help"),
         }
+    }
+}
+fn gen_npc(sys: &str, disp: bool) {
+    match sys {
+        "c2020" => {
+        
+        },
+        _ => println!("{} is not a system with npc generating rules",sys)
+    }
+
+}
+fn get_camp(campaign: String) -> Result<(String, String, String), &'static str> {
+    let mut vec: Vec<String>;
+    println!(
+        "{}",
+        get_home() + "/.config/carbon/campaigns/" + &campaign + "/camp"
+    );
+    io::stdout().flush().unwrap();
+    if fs::metadata(
+        get_home() + "/.config/carbon/campaigns/" + &campaign + "/camp",
+    ).is_ok()
+    {
+        let mut buf = String::new();
+        fs::File::open(
+                get_home() + "/.config/carbon/campaigns/" + &campaign + "/camp",
+            )
+            .unwrap()
+            .read_to_string(&mut buf)
+            .unwrap();
+        vec = buf.split('\n').map(String::from).collect::<Vec<String>>();
+        Ok((
+            String::from(vec[0].as_ref()),
+            String::from(vec[1].as_ref()),
+            String::from(vec[2].as_ref()),
+        ))
+    } else {
+        println!("This campaign doesn't exist");
+        Err("DNE")
     }
 }
 fn create_campaign() {
@@ -91,10 +145,13 @@ fn switch_campaign(name: &str) {
         .unwrap();
     println!("You are now editing {}", name);
 }
-fn get_editing () -> String{
+fn get_editing() -> String {
     let mut buf = String::new();
-    OpenOptions::new().create(true).write(true).open(get_home()+"/.config/carbon/editing").unwrap().read_to_string(&mut buf).unwrap();
-    buf
+    fs::File::open(get_home() + "/.config/carbon/editing")
+        .expect("bad")
+        .read_to_string(&mut buf)
+        .expect("badder");
+    String::from(buf.trim())
 }
 fn print_help() {
     println!("Commands:");
