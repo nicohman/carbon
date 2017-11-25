@@ -4,6 +4,7 @@ use std::fs::DirEntry;
 use std::env;
 use std::fs;
 use std::fs::OpenOptions;
+use std::io::Read;
 fn main() {
     if fs::metadata(get_home() + "/.config/carbon").is_err() {
         init();
@@ -38,6 +39,7 @@ fn interpret_line(line: &str) {
                 }
             }
             "help" => print_help(),
+            "use" => switch_campaign(opts[1].as_ref()),
             _ => println!("No known command entered. help for help"),
         }
     }
@@ -74,9 +76,25 @@ fn create_campaign() {
             &name,
             &sys
         );
+        switch_campaign(&name);
     } else {
         println!("There is already a campaign named {}", name);
     }
+}
+fn switch_campaign(name: &str) {
+    OpenOptions::new()
+        .create(true)
+        .write(true)
+        .open(get_home() + "/.config/carbon/editing")
+        .unwrap()
+        .write_all(String::from(name).as_bytes())
+        .unwrap();
+    println!("You are now editing {}", name);
+}
+fn get_editing () -> String{
+    let mut buf = String::new();
+    OpenOptions::new().create(true).write(true).open(get_home()+"/.config/carbon/editing").unwrap().read_to_string(&mut buf).unwrap();
+    buf
 }
 fn print_help() {
     println!("Commands:");
