@@ -1,0 +1,6 @@
+[package]
+name = "carbon"
+version = "0.1.0"
+authors = ["nicohman <nico.hickman@gmail.com>"]
+
+[dependencies]
