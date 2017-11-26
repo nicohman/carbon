@@ -5,7 +5,20 @@ use std::env;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Read;
-use std::fs::File;
+use std::str::FromStr;
+use std::collections::HashMap;
+struct Npc {
+    name:String,
+    skills:HashMap<String, i32>,
+    age:i32,
+    class:String,
+}
+impl Npc {
+    fn to_string(&self) -> String {
+        let skills:String = self.skills.keys().map(|key| String::from("|")+&key+":"+&format!("{}",self.skills.get(key).unwrap())).collect::<String>();
+        String::from("|\n")+&self.name+"\n"+&format!("{}", &self.age)+"\n"+&self.class+"\n"+&skills
+    }
+}
 fn main() {
     if fs::metadata(get_home() + "/.config/carbon").is_err() {
         init();
@@ -60,10 +73,15 @@ fn interpret_line(line: &str) {
         }
     }
 }
+fn add_npc(npc:Npc, camp:&str){
+    if fs::metadata(get_home()+"/.config/carbon/campaigns/"+camp+"/npcs").is_ok(){
+        OpenOptions::new().create(true).write(true).append(true).open(get_home()+"/.config/carbon/campaigns/"+camp+"/npcs").unwrap().write_all(npc.to_string().as_bytes()).unwrap();
+    }
+}
 fn gen_npc(sys: &str, disp: bool) {
     match sys {
         "c2020" => {
-        
+
         },
         _ => println!("{} is not a system with npc generating rules",sys)
     }
